@@ -11,18 +11,21 @@ class TodoSeeder extends Seeder
      */
     public function run()
     {
-        $testData = [
-            [
-                'content' => 'PHP Appセクションを終える',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'content' => 'Laravel Lessonを終える',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ];
-        DB::table('todos')->insert($testData);
+        DB::table('todos')->truncate();
+
+    $testData = [
+        [
+            'content' => 'PHP Appセクションを終える',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'content' => 'Laravel Lessonを終える',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+    ];
+
+    DB::table('todos')->insert($testData);
     }
 }

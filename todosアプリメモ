@@ -1,0 +1,31 @@
+一覧画面の表示機能の作成
+
+流れについては以下画像参照
+https://res.cloudinary.com/gizumo-inc/image/upload/v1713129945/curriculums/Laravel%20Lesson/App/index_mvc.png
+
+①一覧画面のURI(URL)の設定
+PHP Appレッスンでは、直前のURIごとに実行する処理を変更する関数を定義していたが、
+Laravelでは、URI(URL)とHTTPメソッドの組み合わせで実行する処理を変更することができる。
+
+URI(URL)とHTTPメソッドの組み合わせで実行する処理を指定することをルート定義と呼ぶ。
+ルート定義は、routes/web.phpに記述する必要がある。
+
+routes/web.php②以下を記述
+
+Route::get('/todo', function () {
+    echo 'Hello World!';
+});
+
+Route::get()はHTTPメソッドのGETを示しており、getメソッドの第一引数がURIを示している。
+第二引数にそのURI(URL)とHTTPメソッドの組み合わせで実行したい処理を記述することでルートを定義することができる。
+
+
+②一覧画面を表示
+
+
+
+③DBに登録されているデータを取得する
+④取得したデータを画面に渡す
+⑤画面上にデータを表示する
+
+
