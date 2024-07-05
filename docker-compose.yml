@@ -10,7 +10,8 @@ services:
     depends_on:
       - db
   db:
-    image: mysql@sha256:45ad5952e4f304d39aedb02caf7e0afc30a310e66f7ab60af8acf20fd4a0f54c
+    image: mysql:8.0
+    platform: linux/amd64
     volumes:
       - db:/var/lib/mysql
     ports:
