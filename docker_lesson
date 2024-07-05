@@ -1,0 +1,64 @@
+⚫️仮想環境が必要な理由
+ほとんどの方が開発用のPCにMacOSやWindowsOSを利用しているが、実際に本番環境で利用するのはLinuxOS。
+MaxOSでは動いてもWindowsでは動かない、その逆、どちらでも動かない可能性がある。
+開発環境の中に本番環境と同等の環境を用意することで、環境の違いによる不具合の発生を防ぐ目的がある。
+また、開発者同士も同じ環境を用意するため、環境構築の手順を統一できるという利点もある。
+
+この環境を仮想的に用意するためのツールとしてdockerが存在する。
+仮想環境を作成するには、仮想環境の元となるファイルを持ってくる必要がある。これをdockerイメージという。
+dockerイメージはdockerhubというリモート空間に用意されている。今回はcentOSというイメージを選択する。
+centOSのイメージをローカルに持ってくる $ docker pull centos: centos 7
+取得できているか確認する $ docker images
+取得したイメージから実際に仮想環境を構築する。仮想環境のことをdockerではコンテナという。
+dockerイメージからカスタマイズしたい場合はdockerファイルというファイルに記述して設定をカスタマイズできる。
+コンテナを立ち上げる $ docker run -it-d --name centos centos: centos7
+$ docker psコマンドで立ち上がっているかどうか確認できる(statusがupになっていれば立ち上がっている)
+仮想環境が立ち上がったらログインしてみる $ docker exec -it centos bash
+以下のようにでたらログイン成功[root@0bf12299073b /1#
+コンテナから抜ける時はexitコマンドで抜ける。
+コンテナを停止させたいときは、 $ docker stop centos7
+停止させたコンテナを再開させたいときは、 $ docker start centos 7
+コンテナの中に入って作業をするときは、コンテナが再開していて、statusがupになっている必要がある。
+不要なコンテナが立ち上がり続けていると、PCの負荷になるので、$ docker stop centos7でコンテナを停止する。
+
+実際の開発では、複数のコンテナを立ち上げて作業をする。
+そのためコンテナの数分、docker runコマンドでコンテナを立ち上げ、コンテナの数分、docker stopコマンドでコンテナを停止しないといけない。
+これらの作業を一括で行うために、docker-composeというdockerの拡張ツールがある。
+dockerは単一のコンテナを取り扱うものだが、複数のコンテナに対して起動・停止・削除等の操作したい場合には、Dockerでは少々不便。
+Docker Composeは、コンテナを一括操作することができます。
+例えば、docker-compose up -d というコマンドでは、docker-compose.ymlをもとに、複数のコンテナの立ち上げを一括で行えるし、
+docker-compose stop では同じくdocker-compose.ymlをもとに、複数のコンテナの停止を一括で行える。
+Docker Composeのコマンドは、docker-compose.ymlというファイルを常に参照している。
+docker-compose.ymlとはコンテナを一括操作するための設計図のようなもの。
+Docker Composeのコマンドは、この設計図を元に実行されているため、必ずdocker-compose.ymlファイルが配置されているディレクトリで実行する必要がある。
+
+docker composeコマンド一覧
+up docker-compose.ymlの内容を元にコンテナを起動
+ps docker-compose.ymlに記述している対象のコンテナの状態を確認
+exec 指定のDockerコンテナ内部で各種コマンドを実行
+stop docker-compose.ymlで管理しているコンテナを停止
+down docker-compose.ymlで管理しているコンテナを一括削除
+
+docker-composeで管理するコンテナの設定はdocker-compose.ymlというファイルに記述する。
+$ docker-compose up -d コマンドを使用することで、プロジェクトに使用するコンテナを一括で立ち上げることができる。
+docker-compose内にログインし、作業をするには、docker-compose exec［サービス名］bashを使用する。
+$ docker-compose downコマンドを使用することで、コンテナを一括で削除することができる
+
+YML(YAML)とは
+ヤムル、またはヤメルと読む。
+半角スペース2つのインデントでデータの階層構造を表現するという特徴がある。
+データ構造を表現するフォーマットで、見易さに定評があり、サーバーサイド言語やその他ソフトウェアの設定ファイルによく使用される。
+
+docker-compose up -dでコマンドを立ち上げると、
+左のコンテナはPHPとApacheがインストールされており、Apacheが内部で起動しているコンテナで
+右のコンテナはMySQLがインストールされており、MySQLが内部で起動しているコンテナ。
+2つのコンテナは、Docker Composeが作り出すネットワーク上に配置され相互に コンテナサービス名 での接続が可能。
+下記画像参照：
+https://res.cloudinary.com/gizumo-inc/image/upload/v1630568791/curriculums/Server%20Lesson/docker-compose_application_flow.png.001.png
+今回はlaravel-docker-templateというリポジトリをfork、git cloneを行い使用する
+※forkとは、GitHub上で他ユーザーが所有するリポジトリを、自アカウントのリモートリポジトリへコピーすること
+※git cloneとは、GitHub上のリモートリポジトリをローカルリポジトリへコピーすること
+
+Laravelのインストールについて
+
+
