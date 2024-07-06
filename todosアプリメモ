@@ -92,7 +92,7 @@ $todosには、Controllerにて取得したCollectionインスタンスが代入
 先にも述べた通り「配列にできてCollectionにできないことはない」ので、問題ない。
 foreachを使うことにより、Collectionインスタンスに格納されているTodoインスタンスを一つずつ$todoとして取り出している。
 bladeでは、PHPを記述する際に{{ }}を用いる。この波括弧で囲うことで、その部分がPHPの処理として認識される。
-$todo->contentはただのPHPの処理でしたので{{ }}が必要でした。
+$todo->contentはただのPHPの処理でしたので{{ }}が必要。
 $todo->contentはtodosテーブルのレコードのcontentカラムを取得している。
 このようにモデルクラスのインスタンスからは、$model->カラム名という記述で対応するレコードのカラム値を取得できる。
 これとは別に{!! !!}という記法もあり、使い方は{{ }}と同じ。
@@ -154,5 +154,88 @@ resources/views/todo/create.blade.php
 引数に同じ文字列'content'を指定することで、@section()と@yield()を紐づけている。
 こうすることで、複数のBladeを組み合わせて1枚のHTMLを生成することが可能になる。
 重複するコードを共通化して再利用できるようになるため、保守性が向上する。
+
+
+⑧DBにデータを保存
+ToDoの新規作成処理の実装の流れは以下4つ。
+
+1.新規作成機能のルートの設定
+ォームが送信された時にリクエストする、新規作成処理のルートを設定。
+ToDoを新規作成するルートのため、HTTPメソッドはPOSTになる。
+routes/web.phpに以下を追記
+Route::post('/todo', 'TodoController@store')->name('todo.store');
+
+定義したルートに対応するControllerのメソッドを定義。
+
+作成ボタンを押した時に先ほど定義したルートが実行されるように、formタグのmethod属性とaction属性を記述
+<form method="post" action="{{ route('todo.store') }}">
+
+CSRF対策
+作成ボタンを押すとdd()の結果ではなく以下のエラー画面が表示される。
+419 Page Expired
+この画面が表示されるのは、フォームを送信した際にCSRF対策のトークンが送信されておらず、無効なページと判断されているため。
+Laravelではフォーム内に@csrfを追記するだけでCSRF対策が完了する。
+新規作成画面でデベロッパーツールを使用して、@csrfが挿入されている箇所を確認すると
+以下のように、CSRF対策のためのトークンが含まれたinputタグが生成されているのを確認できる。
+<input type="hidden" name="_token" value="LZbo3MlrlFzHjmYHYiKw1Q9rxSpFvfB9LYZMWhPE">
+この状態でフォームを送信することで、CSRF対策のトークンも一緒に送信され、Laravel側でトークンの検証も自動的に行ってくれる。
+
+
+2.フォームから送信された値の取得
+フォームから送信されたToDoの内容を取得する。
+フォームから送信されたデータはIlluminate\Http\Requestクラスの->input()を使用することで取得できる。
+->input()の引数には値を取得したい入力欄のname属性を指定。
+app/Http/Controllers/TodoController.phpに追記
+
+storeメソッドの引数にRequest $requestと書くことで、$requestにRequestクラスのインスタンスを代入している。
+Laravelでは、メソッドの引数の左側にクラス名を書くことで、インスタンス化が自動で行われ、これをメソッドインジェクションと呼ぶ。
+
+
+3.データの新規登録
+ControllerからModelを呼び出し、取得したデータを使ってデータベースに新しいToDoを登録する処理を実装する。
+LaravelのModelを使用したデータの新規作成は、TodoController.phpで、以下のステップで行う。
+
+・todosテーブルの1レコードを表すTodoクラスをインスタンス化
+$todo = new Todo();
+・Todoインスタンスのカラム名のプロパティに保存したい値を代入
+$todo->content = $content;
+・Todoインスタンスの->save()を実行してオブジェクトの状態をDBに保存するINSERT文を実行
+$todo->save();
+以下画像参照
+https://res.cloudinary.com/gizumo-inc/image/upload/v1623138052/curriculums/Laravel%20Lesson/App/orm_insert.png
+
+Modelをテーブルの1レコードに見立てることで、DBへの接続処理や複雑なSQLを記述することなく、直感的にDBを操作することができる。
+
+
+4.一覧画面へのリダイレクト
+一覧画面にリダイレクトする処理を実装
+routes/web.phpを下記のように変更
+Route::get('/todo', 'TodoController@index')->name('todo.index');
+
+app/Http/Controllers/TodoController.phpにリダイレクト処理を追記
+return redirect()->route('todo.index');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
