@@ -62,7 +62,7 @@ app/Http/Controllers/TodoController.phpに以下記述追加
 use App\Todo;
 $todo = new Todo();
 
-todosテーブルのレコードを全件取得するための実装。たった一行追加するだけで、全件取得することができる。
+todosテーブルのレコードを全件取得するための実装。allメソッドを追加するだけで、全件取得することができる。
 app/Http/Controllers/TodoController.phpに以下記述追加
 $todos = $todo->all();
 PHPはvar_dumpを使用することでデバッグを行うが、Laravelでは、Laravel固有のdd()を使用することでデバッグを行う。
@@ -71,7 +71,17 @@ CollectionインスタンスはLaravelで用意されているクラスで配列
 下記画像参照
 https://res.cloudinary.com/gizumo-inc/image/upload/v1621913140/curriculums/Laravel%20Lesson/App/orm.png
 
+
 ④取得したデータを画面に渡す
+todosテーブルのレコード情報を全て取得しただけでは画面に表示はされない。取得したデータをHTMLファイルに渡す必要がある。
+Laravelでは、Controllerから、HTMLを表すbladeファイルへデータを渡すためにview関数を利用する。
+view関数は画面に表示したいbladeファイルを第一引数で指定し、第二引数に渡したいデータを連想配列の形で渡すことができる。
+view関数の第二引数の連想配列は、[blade内での変数名 => 代入したい値]を意味する。
+実際にbladeファイルデータが渡っているか確認するためにbladeファイルでデバッグする。@dd()を使用する。
+view関数を用いることでControllerからbladeファイルへデータを渡すことができる。
+
+
+
 ⑤画面上にデータを表示する
 
 
