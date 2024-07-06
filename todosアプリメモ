@@ -98,3 +98,17 @@ $todo->contentはtodosテーブルのレコードのcontentカラムを取得し
 これとは別に{!! !!}という記法もあり、使い方は{{ }}と同じ。
 
 
+⑥新規作成画面の表示
+resources/views/todo/index.blade.phpに「ToDoを追加」ボタンを表示するコードを追加。
+
+ボタンを押下した際にリクエストするルートを定義。
+routes/web.phpに以下コードを追加
+Route::get('/todo/create', 'TodoController@create');
+
+resources/views/todo/create.blade.phpを作成
+
+作成したBladeをview()を使用してControllerから実行しHTMLを生成。
+app/Http/Controllers/TodoController.phpを以下コードに修正
+return view('todo.create');
+
+
