@@ -10,7 +10,7 @@ Laravelでは、URI(URL)とHTTPメソッドの組み合わせで実行する処�
 URI(URL)とHTTPメソッドの組み合わせで実行する処理を指定することをルート定義と呼ぶ。
 ルート定義は、routes/web.phpに記述する必要がある。
 
-routes/web.php②以下を記述
+routes/web.phpに以下を記述
 
 Route::get('/todo', function () {
     echo 'Hello World!';
@@ -21,7 +21,25 @@ Route::get()はHTTPメソッドのGETを示しており、getメソッドの第�
 
 
 ②一覧画面を表示
+todoにアクセスした際に実行したい処理をroutes/web.phpに記載したが、
+実行したい処理はControllerに移した方が保守性の観点から望ましい。
 
+Controllerに処理を移すには、Route::get()の第二引数に対象のControllerとそのメソッドを指定する必要がある。
+今回はTodoControllerのindexメソッドに処理を移譲する。
+
+# appコンテナ内に以下コマンド
+php artisan make:controller TodoController
+
+routes/web.phpの記述を以下に変更
+Route::get('/todo', 'TodoController@index');
+
+TodoController.phpに処理内容を記述
+
+一覧画面であるresources/views/todo/index.blade.phpを作成し、中身を記述
+
+TodoController.phpの記述を変更
+view関数を用いることで、画面として表示したいHTMLを指定することができる。
+view関数の引数には、表示させたいBladeファイルを指定する必要があり、「resources/views/から対象の*.blade.phpまでの相対パスを.区切りで指定」する。
 
 
 ③DBに登録されているデータを取得する
