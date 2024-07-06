@@ -43,6 +43,34 @@ view関数の引数には、表示させたいBladeファイルを指定する�
 
 
 ③DBに登録されているデータを取得する
+Laravelでは、ORM (Object-Relational Mapping) の一つであるEloquentを用いることでDBの操作を行うことができる。
+ORMとは、プログラミング言語のClassとデータベースのテーブルをマッピング（関連付け）することでSQLを直接操作することなく
+データベースとマッピングされたClassのメソッドを用いることでDBとやり取りを行うことができる。
+Laravelでは、データベースのテーブルとマッピングするClassがModelに当たる。
+
+ModelのClassを作成し、データベースのテーブルとマッピングをする。
+# appコンテナ内で以下コマンド
+php artisan make:model Todo
+
+app配下に作成されたTodoModelをデータベースのtodosテーブルとマッピングする。
+app/Todo.phpに以下記述追加
+protected $table = 'todos';
+Modelを介することでSQL文を組み立てることなくtodosテーブルを操作することができるようになる。
+
+TodoControllerでTodoModelを使えるようにするために、インスタンス化を行う。
+app/Http/Controllers/TodoController.phpに以下記述追加
+use App\Todo;
+$todo = new Todo();
+
+todosテーブルのレコードを全件取得するための実装。たった一行追加するだけで、全件取得することができる。
+app/Http/Controllers/TodoController.phpに以下記述追加
+$todos = $todo->all();
+PHPはvar_dumpを使用することでデバッグを行うが、Laravelでは、Laravel固有のdd()を使用することでデバッグを行う。
+ddによって、allメソッドの返り値がIlluminate\Database\Eloquent\Collectionクラスのインスタンスであることがわかる。
+CollectionインスタンスはLaravelで用意されているクラスで配列操作に特化したクラスになる。
+下記画像参照
+https://res.cloudinary.com/gizumo-inc/image/upload/v1621913140/curriculums/Laravel%20Lesson/App/orm.png
+
 ④取得したデータを画面に渡す
 ⑤画面上にデータを表示する
 
