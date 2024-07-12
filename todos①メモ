@@ -1,0 +1,330 @@
+⚫️マイグレーションファイルとSeederファイルでDBを操作・管理する理由
+マイグレーションファイルはテーブルの作成を担い、Seederファイルはレコード(テストデータ)の作成を担う役割を持つ。
+①どちらも各ファイルをGitで共有することで、開発者全員が現在のデータベースの状態を共有したり同じ構成のテーブルを作成したりすることができる。
+②SQLを知らなくても、PHPコードでテーブル操作やレコード操作ができる。(学習コストが不要)
+
+
+⚫️マイグレーションファイルの作成から実行まで
+# appコンテナ内で以下コマンド
+①php artisan make:migration create_todos_tableコマンドでmigrationファイルを作成
+※Laravelでは、artisanコマンドを用いることでターミナルからファイル作成等を行うことができる。
+
+②マイグレーションファイルにupメソッドの処理内容を記述
+upメソッドとは、データベースに新しいテーブルやカラムなどを生成するための処理。
+デフォルトでidカラムとタイムスタンプの2つが既に記述されているため、その書き方にしたがって、追加したいカラムを記述する。
+今回は、contentカラムを追加。
+# appコンテナ内
+php artisan migrateコマンドでup()を実行する
+※もし表示されていない場合は、データベースの接続情報が間違っている可能性があるため、.envの設定が正しいか確認
+
+③todosテーブルが作成されていることを確認
+# dbコンテナ内
+mysql> use laravel_app;
+mysql> DESC todos;
+マイグレーションを用いることで直接SQLを記載することなくテーブルを作成することができる。
+
+④マイグレーションファイルにdownメソッドの処理内容を記述
+downメソッドは、upメソッドによって実行する操作と逆の操作を実装し、以前の状態へ戻すための処理
+# appコンテナ内
+php artisan migrate:rollbackコマンドでdown()を実行する
+
+⚫️Seederファイルの作成から実行まで
+①マイグレーションファイル同様、artisanコマンドでシーダーファイルを作成することができる
+# appコンテナ内
+php artisan make:seeder TodoSeederコマンドでSeederファイル作成。
+
+②Seederファイルは、TodoSeederクラスとrun()メソッドで構成されている
+run()メソッド内にテストデータの実装処理を連想配列で記述
+DB::table('todos')はtableメソッドの引数のテーブルを操作するための準備
+insertメソッドで引数のデータをテーブルに投入するINSERT文を実行
+truncateメソッドで該当のテーブルのレコードをすべて削除するTRUNCATE文を実行
+開発者間のテストデータに差異が生じないよう、元々テーブルに存在していたデータを削除後、テストデータを投入する必要があるため
+
+③Seederクラスを実行
+# appコンテナ内
+php artisan db:seedコマンドでDatabaseSeederのcallメソッド内のSeederクラスを実行することで、Seederファイルが実行される
+
+④テストデータが作成されているかdbコンテナに入って確認
+# dbコンテナ内
+mysql> SELECT * FROM todos;
+
+
+⚫️一覧画面の表示機能の作成
+
+流れについては以下画像参照
+https://res.cloudinary.com/gizumo-inc/image/upload/v1713129945/curriculums/Laravel%20Lesson/App/index_mvc.png
+
+
+①一覧画面のURI(URL)の設定と表示
+PHP Appレッスンでは、直前のURIごとに実行する処理(switch文)を変更する関数を定義していたが、
+Laravelでは、URI(URL)とHTTPメソッドの組み合わせで実行する処理を定義する。
+
+TodoController.phpを作成
+# appコンテナ内
+php artisan make:controller TodoController
+
+# routes.web.php
+Route::get('/todo', 'TodoController@index')->name('todo.index');
+今回は一覧画面の表示のため、HTTPメソッドはgetになる
+getメソッドの第一引数がURI(URL)、第二引数が処理の実行先(今回はTodoController@index)を表す
+※ 実行したい処理はControllerに移した方が保守性の観点から望ましい。
+
+※ 新規作成画面へ遷移するボタンのhref属性にURLを直接記述すると、
+・直接URLを記述するため可読性が低い
+・URLに変更があった場合に関連する全ての記述を修正する必要があり保守性が低い
+ため、名前付きルートを定義する。
+
+ルートの定義に->name('ルート名')を記述して名前付きルートを定義する。
+# routes/web.php
+Route::get('/todo/create', 'TodoController@create')->name('todo.create');
+
+route('ルート名')とすることで、ルート名からそのルートで設定したURLを生成することができる。
+route('todo.create') を実行した時の返り値は http://localhost:8080/todo/create という文字列になる。
+route()はview()などと同じLaravelでのみ使用できるヘルパ関数と呼ばれる関数の一種。
+# index.blade.php
+<a class="btn btn-success" href="{{ route('todo.create') }}">ToDoを追加</a>
+
+「ToDoを追加」ボタンの要素をデベロッパーツールで確認すると、
+<a class="btn btn-success" href="http://localhost:8080/todo/create">ToDoを追加</a>と表示される
+
+※ 名前付きルートを定義することのメリット
+1.Blade内のURLの記述が簡潔になり可読性が向上する。
+2.URLに変更がある場合でも、ルート名さえ変わらなければ修正箇所はroutes/web.phpのみで済むため、保守性も向上する。
+
+# index.blade.php
+一覧画面であるresources/views/todo/index.blade.phpを作成し、記述
+
+# TodoController.php
+TodoController.phpの記述
+view関数を用いることで、画面として表示したいHTMLを指定することができる。
+view関数の引数には、表示させたいBladeファイルを指定する必要があり、「resources/views/から対象の*.blade.phpまでの相対パスを.区切りで指定」する。
+return view('todo.index')
+
+③DBに登録されているデータを取得する
+Laravelでは、ORM (Object-Relational Mapping) の一つであるEloquentを用いることでDBの操作を行うことができる。
+ORMとは、プログラミング言語のClassとデータベースのテーブルをマッピング（関連付け）することでSQLを直接操作することなく
+データベースとマッピングされたClassのメソッドを用いることでDBとやり取りを行うことができる。
+Laravelでは、データベースのテーブルとマッピングするClassがModelに当たる。
+下記画像参照
+https://res.cloudinary.com/gizumo-inc/image/upload/v1713215488/curriculums/Laravel%20Lesson/App/laravel_lesson_orm.png
+
+ModelのClassを作成し、データベースのテーブルとマッピングをする。
+# appコンテナ内
+php artisan make:model Todo
+
+app配下に作成されたTodoModelをデータベースのtodosテーブルとマッピングする。
+# app/Todo.php
+protected $table = 'todos';
+Modelを介することでSQL文を組み立てることなくtodosテーブルを操作することができるようになる。
+
+TodoControllerでTodoModelを使えるようにするために、インスタンス化を行う。
+# TodoController.php
+use App\Todo;
+$todo = new Todo();
+このタイミングでTodoControllerクラスのコンストラクタが実行される
+
+todosテーブルのレコードを全件取得するための実装。
+# TodoController.php
+$todos = $todo->all();
+todoテーブルのレコードを全件取得している
+PHPはvar_dumpを使用することでデバッグを行うが、Laravelでは、Laravel固有のdd()を使用することでデバッグを行う。
+ddによって、allメソッドの返り値がIlluminate\Database\Eloquent\Collectionクラスのインスタンスであることがわかる。
+CollectionインスタンスはLaravelで用意されているクラスで配列操作に特化したクラスになる。
+配列の代わりにCollectionクラスを使用するメリットとしては、データ操作のための便利なメソッドが数多く存在し、コードが簡潔で読みやすくなる。
+下記画像参照
+https://res.cloudinary.com/gizumo-inc/image/upload/v1621913140/curriculums/Laravel%20Lesson/App/orm.png
+
+
+④取得したデータを画面に渡す
+todosテーブルのレコード情報を全て取得しただけでは画面に表示はされない。取得したデータをHTMLファイルに渡す必要がある。
+# TodoController.php
+return view('todo.index', ['todos' => $todos]);
+Laravelでは、Controllerから、HTMLを表すbladeファイルへデータを渡すためにview関数を利用する。
+view関数の第一引数に、画面に表示したいbladeファイルを指定し、第二引数に渡したいデータを連想配列の形で指定する
+view関数の第二引数の連想配列は、[blade内での変数名 => 代入したい値]を意味する。
+実際にbladeファイルデータが渡っているか確認するためにbladeファイルでデバッグする。@dd()を使用する。
+view関数を用いることでControllerからbladeファイルへデータを渡すことができる。
+
+# index.blade.php
+※ index.blade.phpの@foreach ($todos as $todo)の部分、
+$todosにはControllerで取得したCollectionインスタンスが代入されている。
+foreachを使ってCollectionインスタンスに格納されているTodoインスタンスを一つずつ$todoとして取り出している。
+Collectionは配列の上位互換だからforeachが適用できる。
+
+※ bladeファイルとはテンプレートエンジンの一つで、HTMLに比べて簡単に様々な機能を実施することができる。
+@はディレクティブと呼ばれ一般的なPHPの制御構文の便利な短縮記述方法を提供してくれる。
+@foreachディレクティブはその見た目通りforeachを簡略化して表現したもの
+
+※ bladeでは、PHPを記述する際に{{ }}を用いる。この波括弧で囲うことで、その部分がPHPの処理として認識される。
+$todo->contentはPHPの処理のため{{ }}が必要。
+$todo->contentはtodosテーブルのレコードのcontentカラムを取得している。
+このようにモデルクラスのインスタンスからは、$model->カラム名という記述で対応するレコードのカラム値を取得できる。
+これとは別に{!! !!}という記法もある。{{ }}は{{ }}内の文字記号をエスケープ処理してくれるが、{!! !!}はエスケープ処理しない
+
+
+⑥新規作成画面の表示
+resources/views/todo/index.blade.phpに「ToDoを追加」ボタンを表示するコードを追加。
+
+ボタンを押下した際にリクエストするルートを定義。
+# routes/web.php
+Route::get('/todo/create', 'TodoController@create');
+
+作成したBladeをview()を使用してControllerから実行しHTMLを生成。
+# TodoController.php
+return view('todo.create');
+
+# create.blade.php
+resources/views/todo/create.blade.phpを作成
+
+
+⑦Route・Viewのリファクタリング
+bladeの分割と継承について
+一覧画面と新規作成画面のBladeには、同じ記述が複数回登場している。
+もし修正が必要な場合は全てのファイルの同じ記述を変更する必要があり、保守性が低い状態になってしまっている。
+この問題を解決するために、共通部分を別Bladeに分割する。これにより、共通の部分を別ファイルにまとめ、再利用可能にする。
+bladeの分割と継承を行うことで、重複するコードを共通化して再利用し、保守性が向上する。
+# index.blade.php,create.blade.php
+一覧画面と新規作成画面のBlade(子blade)の共通部分を削除・追記
+@extends('layouts.base') → 継承する親Bladeを指定
+@section('content') ~ @endsection → 親Bladeの@yield('content')に挿入
+# base.blade.php
+子bladeの共通部分を記述
+@yield('content') → 子bladeの@section('content') ~ @endsectionを挿入
+
+引数に同じ文字列'content'を指定することで、@section()と@yield()を紐づけている。
+※ @include → 共通レイアウト以外の他のビューを部品として読み込みたいときに使う(@extendと対にして使用する??)
+
+
+⑧DBにデータを保存
+ToDoの新規作成処理の実装の流れは以下4つ。
+
+1.新規作成機能のルートの設定
+フォームが送信された時にリクエストする、新規作成処理のルートを設定。
+ToDoを新規作成するルートのため、HTTPメソッドはPOSTになる。
+# routes/web.php
+Route::post('/todo', 'TodoController@store')->name('todo.store');
+
+作成ボタンを押した時に先ほど定義したルートが実行されるように、formタグのmethod属性とaction属性を記述
+# create.blade.php
+<form method="post" action="{{ route('todo.store') }}">
+
+CSRF対策
+この状態で作成ボタンを押しても419 Page Expiredとなり、リクエストが送信されない
+この画面が表示されるのは、フォームを送信した際にCSRF対策のトークンが送信されておらず、無効なページと判断されているため。
+Laravelではフォーム内に@csrfを追記するだけでCSRF対策が完了する。
+新規作成画面でデベロッパーツールを使用して、@csrfが挿入されている箇所を確認すると
+以下のように、CSRF対策のためのトークンが含まれたinputタグが生成されているのを確認できる。
+<input type="hidden" name="_token" value="LZbo3MlrlFzHjmYHYiKw1Q9rxSpFvfB9LYZMWhPE">
+この状態でフォームを送信することで、CSRF対策のトークンも一緒に送信され、Laravel側でトークンの検証も自動的に行ってくれる。
+
+
+2.フォームから送信された値の取得
+# TodoController.php
+use Illuminate\Http\Request;
+Laravel フレームワークのコードでRequestクラスを取得するための文。HTTPリクエストに関する情報を取得するために使用される。
+
+public function store(Request $request)
+storeメソッドの引数にRequest $requestと書くことで、$requestにRequestクラスのインスタンスを代入している。
+Laravelでは、メソッドの引数の左側にクラス名を書くことで、インスタンス化が自動で行われ、これをメソッドインジェクションと呼ぶ。
+
+フォームから送信されたデータはIlluminate\Http\Requestオブジェクトの->input()を使用することで取得できる。
+->input()の引数には値を取得したい入力欄のname属性を指定。
+$content = $request->input('content');
+
+3.データの新規登録
+# TodoController.php
+・todosテーブルの1レコードを表すTodoクラスをインスタンス化
+$todo = new Todo();
+・Todoインスタンスのカラム名のプロパティに保存したい値を代入
+$todo->content = $content;
+・1レコード分のTodoインスタンスをDBに保存するINSERT文を実行
+$todo->save();
+
+以下画像参照
+https://res.cloudinary.com/gizumo-inc/image/upload/v1623138052/curriculums/Laravel%20Lesson/App/orm_insert.png
+
+Modelをテーブルの1レコードに見立てることで、DBへの接続処理や複雑なSQLを記述することなく、直感的にDBを操作することができる。
+
+4.一覧画面へのリダイレクト
+ToDoが新規作成された後に、一覧画面にリダイレクトする
+# TodoController.php
+return redirect()->route('todo.index');
+
+
+⑨一括代入（Mass Assignment）
+今のstoreメソッドの実装だと、もし新規作成画面に入力する項目が増えた場合に、
+コードの修正が必要かつ肥大化する懸念があるため、保守性が低い状態になってしまう。
+項目の数だけ入力値の取得とTodoインスタンスへの代入のコードが増えてしまう。
+大規模なアプリケーションの場合はコードがさらに長くなり、可読性も低下する。
+これを回避するために、一括代入（Mass Assignment）を使ってリファクタリングが必要になる。
+この処理を行うことで画面の入力項目が増減しても常に同じコードで登録処理が実現できるようになり保守性と可読性が向上する
+
+# TodoController.php
+1. フォームから送信された値を個別ではなく一括で取得
+ $inputs = $request->all();
+
+2. 取得した値をModelに一括で代入
+連想配列で取得した値を->fill()を使用して、Todoインスタンスの各プロパティに一括で代入。
+->fill()は$todo->{連想配列のkey} = {連想配列のvalue}を配列の全ての要素に対して行う。
+
+※ 一括代入の脆弱性と$fillableについて
+# app/Todo.php
+protected $fillable = [
+  'content',
+];
+$fillableに、->fill()によってModelに代入可能なプロパティを記述する(今回は'content')。
+なぜこのような制限をかけるかというと、便利な一括代入には脆弱性があり、
+対策をせずに使用すると悪意のあるユーザに攻撃されてしまう恐れがあるため。
+->fill()を使用した一括代入を行う際は、Modelに$fillableを適切に設定し、意図しないカラムを更新されないように注意する。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
