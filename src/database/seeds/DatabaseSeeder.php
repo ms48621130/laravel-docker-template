@@ -9,7 +9,7 @@ class DatabaseSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run() //php artisan db:seedコマンドでcallメソッド内のSeederクラスを実行することで、Seederファイルが実行される
     {
         $this->call([
             TodoSeeder::class,

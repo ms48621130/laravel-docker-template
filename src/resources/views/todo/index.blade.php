@@ -14,10 +14,8 @@
         </div>
         <div class="list-group list-group-flush">
           @foreach ($todos as $todo)
-          <!-- foreachを使って$todosを1レコードずつ$todoとして取り出している。 -->
             <div class="d-flex align-items-center p-2">
               <span class="col-9">{{ $todo->content }}</span>
-              <!-- todosテーブルのレコードのcontentカラムを取得している -->
               <a href="{{ route('todo.show', $todo->id) }}" class="btn btn-info ml-3">詳細</a>
               <!-- 第一引数に遷移先のURLを指定し、第二引数にルートパラメータを指定している -->
             </div>

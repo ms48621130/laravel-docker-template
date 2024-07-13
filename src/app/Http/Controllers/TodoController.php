@@ -7,43 +7,55 @@ use App\Todo;
 
 class TodoController extends Controller
 {
-    public function index() // indexメソッドを呼び出す
+    private $todo; // TodoControllerのクラスプロパティを表す
+    public function __construct(Todo $todo) // Todoクラスのインスタンス化と$todoへの代入を同時にしている。コンストラクトインジェクションと呼ぶ。
     {
-        $todo = new Todo(); // todosテーブルを操作するためにTodoクラスをインスタンス化し、$todoに代入している
-        $todos = $todo->all(); // $todoのallメソッドを返した実行結果を$todosに代入している。これはtodosテーブルのレコードを全件取得している。
+        $this->todo = $todo; // コンストラクタインジェクションで生成したTodoクラスのインスタンスをプロパティに代入している。
+    }
+    public function index()
+    {
+        $todo = new Todo();
+        $todos = $todo->all();
         // $todosの返り値はcollectionインスタンス。Collectionクラスを使うメリットは、データ操作のための便利なメソッドが数多く存在し、
         // コードが簡潔で可読性が上がることがメリットとして挙げられる。
-        return view('todo.index', ['todos' => $todos]); // view関数を使用して、第一引数には画面に表示したいbladeファイルを指定し、
-        // 第二引数のキー部分にblade内の変数名であるtodosを指定し、バリュー部分に代入したい値である$todosを指定した実行結果をreturnで返している
+        // $todo = $this->todo->all();
+        return view('todo.index', ['todos' => $todos]);
     }
 
-    public function create() // createメソッドを呼び出す
+    public function create()
     {
-        return view('todo.create'); // view関数を使用して、引数に画面に表示したいbladeファイルを指定した実行結果をreturnで返している
+        return view('todo.create');
     }
 
     public function store(Request $request) // storeメソッドを呼び出し、Requestクラスのインスタンス化と$requestへの代入を同時にしている。メソッドインジェクションと呼ぶ。
-    // RequestクラスはHTTPリクエスト処理をシンプルに操作できるクラス。
+    // RequestクラスはHTTPリクエスト処理をシンプルに操作できるクラス。$requestにはフォームから送信された値が格納されている。
     {
         // dd($request);
-        $inputs = $request->all(); // $requestのallメソッドを返した実行結果を$inputsに代入している。
-        // Requestインスタンスのallメソッドを使用してフォームから送信された値を個別ではなく一括で取得できる。$inputsは連想配列
+        $inputs = $request->all(); //$inputsは連想配列
         // dd($inputs);
-        $todo = new Todo(); // todosテーブルを操作するためにTodoクラスをインスタンス化し、$todoに代入している
+        $todo = new Todo();
         // dd($todo);
-        $todo->fill($inputs); // fillメソッドを使って$inputsに格納されている連想配列を$todoに代入
+        $todo->fill($inputs);
+        // $this->todo->fill($inputs);
         // ->fill()は$todo->{連想配列のkey} = {連想配列のvalue}を配列の全ての要素に対して行う。
+        
         // dd($todo);
-        $todo->save(); // TodoインスタンスをDBに保存するINSERT文を実行
-        return redirect()->route('todo.index'); // ToDoが新規作成された後に、一覧画面にリダイレクトする
+        $todo->save();
+        // $this->todo->save();
+        return redirect()->route('todo.index');
     }
     
     public function show($id) // showメソッドの引数にルートパラメータを受け取ることができる。$idという変数で受け取る。
     {
-        $model = new Todo(); // todosテーブルを操作するためにTodoクラスをインスタンス化し、$modelに代入している
-        $todo = $model->find($id); // $modelのfindメソッドの$idを引数に返した実行結果を$todoに代入している
+        $todo = $this->todo->find($id); // Todoインスタンスのfindメソッドの$idを引数に返した実行結果を$todoに代入している
         return view('todo.show', ['todo' => $todo]); // view関数を使用して、第一引数には画面に表示したいbladeファイルを指定し、
         // 第二引数のキー部分にblade内の変数名であるtodosを指定し、バリュー部分に代入したい値である$todosを指定した実行結果をreturnで返している
     }
     
+    public function edit($id) // editメソッドの引数にルートパラメータを受け取ることができる。$idという変数で受け取る。
+    {
+        $todo = $this->todo->find($id);
+        dd($todo);
+        return view('todo.edit', ['todo' => $todo]);
+    }
 }

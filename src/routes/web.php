@@ -24,3 +24,5 @@ Route::post('/todo', 'TodoController@store')->name('todo.store');
 Route::get('/todo/{id}', 'TodoController@show')->name('todo.show');
 // 詳細画面の表示のため、HTTPメソッドはget。getメソッドの第一引数がURI(URL)、第二引数が処理の実行先(今回はTodoController@show)を表す
 // /{id}の部分をルートパラメータという。{}は変数を表す。
+Route::get('/todo/{id}/edit', 'TodoController@edit')->name('todo.edit');
+// 編集画面の表示のため、HTTPメソッドはget。getメソッドの第一引数がURI(URL)、第二引数が処理の実行先(今回はTodoController@edit)を表す
