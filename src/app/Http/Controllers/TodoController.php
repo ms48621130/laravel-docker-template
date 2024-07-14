@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\TodoRequest;
 use App\Todo;
 
 class TodoController extends Controller
@@ -27,7 +27,7 @@ class TodoController extends Controller
         return view('todo.create');
     }
 
-    public function store(Request $request) // storeメソッドを呼び出し、Requestクラスのインスタンス化と$requestへの代入を同時にしている。メソッドインジェクションと呼ぶ。
+    public function store(TodoRequest $request) // storeメソッドを呼び出し、Requestクラスのインスタンス化と$requestへの代入を同時にしている。メソッドインジェクションと呼ぶ。
     // RequestクラスはHTTPリクエスト処理をシンプルに操作できるクラス。$requestにはフォームから送信された値が格納されている。
     {
         // dd($request);
@@ -36,7 +36,8 @@ class TodoController extends Controller
         $todo = new Todo();
         // dd($todo);
         $todo->fill($inputs)->save();
-        // $this->todo->fill($inputs)>save();
+        // $this->todo->fill($inputs);
+        // $this->todo->save();
         // ->fill()は$todo->{連想配列のkey} = {連想配列のvalue}を配列の全ての要素に対して行う。
         return redirect()->route('todo.index');
     }
@@ -54,14 +55,15 @@ class TodoController extends Controller
         return view('todo.edit', ['todo' => $todo]);
     }
 
-    public function update(Request $request, $id)
+    public function update(TodoRequest $request, $id)
     {
         $inputs = $request->all();
         // dd($inputs);
         $todo = $this->todo->find($id);
         // dd($todo);
-        $todo->fill($inputs)->save();
+        $todo->fill($inputs);
         // dd($todo);
+        $todo->save();
         return redirect()->route('todo.show', $todo->id);
     }
 }
