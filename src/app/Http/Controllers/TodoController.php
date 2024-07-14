@@ -10,7 +10,7 @@ class TodoController extends Controller
     private $todo; // TodoControllerのクラスプロパティを表す
     public function __construct(Todo $todo) // Todoクラスのインスタンス化と$todoへの代入を同時にしている。コンストラクトインジェクションと呼ぶ。
     {
-        $this->todo = $todo; // コンストラクタインジェクションで生成したTodoクラスのインスタンスをプロパティに代入している。
+        $this->todo = $todo; // コンストラクタインジェクションで生成したTodoインスタンスをクラスプロパティに代入している。
     }
     public function index()
     {
@@ -18,7 +18,7 @@ class TodoController extends Controller
         $todos = $todo->all();
         // $todosの返り値はcollectionインスタンス。Collectionクラスを使うメリットは、データ操作のための便利なメソッドが数多く存在し、
         // コードが簡潔で可読性が上がることがメリットとして挙げられる。
-        // $todo = $this->todo->all();
+        // $todos = $this->todo->all();
         return view('todo.index', ['todos' => $todos]);
     }
 
@@ -35,21 +35,16 @@ class TodoController extends Controller
         // dd($inputs);
         $todo = new Todo();
         // dd($todo);
-        $todo->fill($inputs);
-        // $this->todo->fill($inputs);
+        $todo->fill($inputs)->save();
+        // $this->todo->fill($inputs)>save();
         // ->fill()は$todo->{連想配列のkey} = {連想配列のvalue}を配列の全ての要素に対して行う。
-        
-        // dd($todo);
-        $todo->save();
-        // $this->todo->save();
         return redirect()->route('todo.index');
     }
     
     public function show($id) // showメソッドの引数にルートパラメータを受け取ることができる。$idという変数で受け取る。
     {
-        $todo = $this->todo->find($id); // Todoインスタンスのfindメソッドの$idを引数に返した実行結果を$todoに代入している
-        return view('todo.show', ['todo' => $todo]); // view関数を使用して、第一引数には画面に表示したいbladeファイルを指定し、
-        // 第二引数のキー部分にblade内の変数名であるtodosを指定し、バリュー部分に代入したい値である$todosを指定した実行結果をreturnで返している
+        $todo = $this->todo->find($id);
+        return view('todo.show', ['todo' => $todo]);
     }
     
     public function edit($id) // editメソッドの引数にルートパラメータを受け取ることができる。$idという変数で受け取る。
@@ -57,5 +52,16 @@ class TodoController extends Controller
         $todo = $this->todo->find($id);
         // dd($todo);
         return view('todo.edit', ['todo' => $todo]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $inputs = $request->all();
+        // dd($inputs);
+        $todo = $this->todo->find($id);
+        // dd($todo);
+        $todo->fill($inputs)->save();
+        // dd($todo);
+        return redirect()->route('todo.show', $todo->id);
     }
 }
