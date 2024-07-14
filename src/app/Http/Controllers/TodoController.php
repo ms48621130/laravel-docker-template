@@ -55,7 +55,7 @@ class TodoController extends Controller
     public function edit($id) // editメソッドの引数にルートパラメータを受け取ることができる。$idという変数で受け取る。
     {
         $todo = $this->todo->find($id);
-        dd($todo);
+        // dd($todo);
         return view('todo.edit', ['todo' => $todo]);
     }
 }
